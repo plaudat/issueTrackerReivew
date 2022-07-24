@@ -1,0 +1,29 @@
+{
+  "name": "bookreview",
+  "version": "1.0.0",
+  "description": "Pro MERN Stack Book Review",
+  "main": "index.js",
+  "scripts": {
+    "//start": "monitor changes in server directory and server.js then recompile",
+    "start": "nodemon -w server ./server/server.js",
+    "//compile": "transpile .jsx files in src and write .js version in public",
+    "compile": "babel src --out-dir public",
+    "//watch": "watch source file changes; if cause recompilation, print line to console",
+    "watch": "babel src --out-dir public --watch --verbose",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.18.1",
+    "nodemon": "^1.19.4",
+    "npm": "^6.14.17"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.18.9",
+    "@babel/core": "^7.18.9",
+    "@babel/preset-env": "^7.18.9",
+    "@babel/preset-react": "^7.18.6"
+  },
+  "author": "",
+  "license": "ISC",
+  "comments": {}
+}

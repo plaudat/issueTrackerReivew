@@ -1,0 +1,9 @@
+.DS_Store
+node_modules
+package-lock.json
+ui/public/*.js
+ui/public/*.map
+.env
+ui/dist
+credentials.json
+deploy/
