@@ -1,20 +1,14 @@
-// class HelloWorld extends React.Component {
+const issues = [
+  {
+    id: 1, status: 'New', owner: 'Ravan', effort: 5, created: new Date('2018-08-15'), due: undefined, title: 'Error in console when clicking Add'
+  },
+  {
+    id: 2, status: 'Assigned', owner: 'Eddie', effort: 14, created: new Date('2018-08-16'), due: new Date('2018-08-30'), title: 'Missing bottom border on panel'
+  },
 
-//   render() {
-//     const continents = ['Africa', 'America', 'Asia', 'Australia', 'Europe'];
-//     const helloContinents = Array.from(continents, c => `Hello ${c}!`);
-//     const message = helloContinents.join(' ');
-    
-//     return (
-//       <div title="Outer div">
-//         <div title="First inner div">
-//         <h1>{message}</h1>
-//         </div>
-//         <div title="Second inner div">Hey What's Up</div>
-//       </div>
-//     );
-//   }
-// }
+];
+
+
 
 
 class IssueFilter extends React.Component{
@@ -27,11 +21,17 @@ class IssueFilter extends React.Component{
 
 class IssueRow extends React.Component{
   render() {
-    const style = this.props.rowStyle;
+    const issue = this.props.issue;
     return (
       <tr>
-        <td style={style}>{this.props.issue_id}</td>
-        <td style={style}>{this.props.issue_title}</td>
+        <td >{issue.id}</td>
+        <td >{issue.status}</td>
+        <td >{issue.owner}</td>
+        <td >{issue.effort}</td>
+        <td >{issue.created.toDateString()}</td>
+        <td >{issue.due? issue.due.toDateString() : ''}</td>
+        <td >{issue.title}</td>
+        
       </tr>
     );
   }
@@ -39,18 +39,22 @@ class IssueRow extends React.Component{
 
 class IssueTable extends React.Component{
   render() {
-    const rowStyle = { border: "1px solid silver", padding: 4 };
+    const issueRows = issues.map(issue => <IssueRow key={issue.id} issue={issue} />);
     return (
-      <table style={{ borderCollapse: "collapse"}}>
+      <table className="bordered-table">
         <thead>
           <tr>
-            <th style={rowStyle}>ID</th>
-            <th style={rowStyle}>Title</th>
+            <th >ID</th>
+            <th >Status</th>
+            <th >Owner</th>
+            <th >Effort</th>
+            <th >Created</th>
+            <th >Due</th>
+            <th >Title</th>
           </tr>
         </thead>
         <tbody>
-          <IssueRow rowStyle={rowStyle} issue_id={1} issue_title="Error in console when cllicking Add" /> {/*somehow pass Issue 1 data to this */}
-          <IssueRow rowStyle={rowStyle} issue_id={2} issue_title="Missing bottom border on panel" /> {/*somehow pass Issue 2 data to this */}
+          {issueRows}    
         </tbody>
       </table>
     );
