@@ -1,4 +1,4 @@
-const issues = [
+const initialIssues = [
   {
     id: 1, status: 'New', owner: 'Ravan', effort: 5, created: new Date('2018-08-15'), due: undefined, title: 'Error in console when clicking Add'
   },
@@ -8,7 +8,10 @@ const issues = [
 
 ];
 
-
+const sampleIssue = {
+  status: 'New', owner: 'Pieta',
+  title: 'Completion date should be optional',
+};
 
 
 class IssueFilter extends React.Component{
@@ -37,9 +40,39 @@ class IssueRow extends React.Component{
   }
 }
 
-class IssueTable extends React.Component{
+class IssueTable extends React.Component {
+  constructor() {
+    super();
+    this.state = { issues: [] };
+    setTimeout(() => {
+      this.createIssue(sampleIssue);
+    }, 2000);
+  }
+
+  componentDidMount() {
+    this.loadData();
+  }
+
+
+  loadData() {
+    setTimeout(() => {
+      this.setState({ issues: initialIssues })}, 500);
+  }
+
+  createIssue(issue) {
+    //set the issue id
+    //state variable not allowed to be set or mutated directly because 
+    //React will not automatically identify such changes
+    issue.id = this.state.issues.length + 1;
+    issue.created = new Date();
+    const newIssueList = this.state.issues.slice();
+    newIssueList.push(issue);
+    this.setState({ issues: newIssueList });
+  }
+
   render() {
-    const issueRows = issues.map(issue => <IssueRow key={issue.id} issue={issue} />);
+    const issueRows = this.state.issues.map(issue => <IssueRow key={issue.id} issue={issue} />);
+
     return (
       <table className="bordered-table">
         <thead>
@@ -54,7 +87,7 @@ class IssueTable extends React.Component{
           </tr>
         </thead>
         <tbody>
-          {issueRows}    
+          {issueRows}
         </tbody>
       </table>
     );
