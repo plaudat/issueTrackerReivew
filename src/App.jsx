@@ -1,3 +1,14 @@
+//regular expression to test for ISO8601-formatted datetime string
+const dateRegex = new RegExp('^\\d\\d\\d\\d-\\d\\d-\\d\\d');
+
+//convert the ISO8601-formatted GraphQLDate scalar retrieved from the server to the native Date type
+function jsonDateReviver(key, value) {
+  if (dateRegex.test(value)) {
+    return new Date(value);
+  }
+  return value;
+}
+
 class IssueFilter extends React.Component {
   render() {
     return (
@@ -5,6 +16,7 @@ class IssueFilter extends React.Component {
     );
   }
 }
+
 
 function IssueRow(props) {
   const issue = props.issue;
@@ -14,8 +26,8 @@ function IssueRow(props) {
       <td >{issue.status}</td>
       <td >{issue.owner}</td>
       <td >{issue.effort}</td>
-      <td >{issue.created}</td>
-      <td >{issue.due}</td>
+      <td >{issue.created.toDateString()}</td>
+      <td >{issue.due ? issue.due.toDateString() : ""}</td>
       <td >{issue.title}</td>
 
     </tr>
@@ -59,7 +71,8 @@ class IssueAdd extends React.Component {
     const form = document.forms.issueAdd;
     const issue = {
       owner: form.owner.value,
-      title: form.title.value, status: 'New',
+      title: form.title.value,
+      due: new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 10),
     }
     this.props.createIssue(issue);
     form.owner.value = "";
@@ -81,7 +94,8 @@ class IssueList extends React.Component {
   constructor() {
     super();
     this.state = { issues: [] };
-    this.createIssue = this.createIssue.bind(this); //bind createIssue to IssueList so arrow function in IssueAdd and anywhere else uses it
+    //bind createIssue to IssueList so arrow function in IssueAdd and anywhere else uses it
+    this.createIssue = this.createIssue.bind(this);
   }
 
   componentDidMount() {
@@ -102,25 +116,30 @@ class IssueList extends React.Component {
       body: JSON.stringify({ query })
     });
 
-    console.log(response);
-
-    const result = await response.json();
+    const body = await response.text();
+    const result = JSON.parse(body, jsonDateReviver);
     this.setState({ issues: result.data.issueList });
-
-    console.log(result);
 
   }
 
+  async createIssue(issue) {
+    const query = `mutation {
+      issueAdd(issue:{
+        title: "${issue.title}", 
+        owner: "${issue.owner}", 
+        due: "${issue.due.toISOString()}",
+      }) {
+        id
+      }
+    }`;
 
+    const response = await fetch('/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    });
 
-  createIssue(issue) {
-    //state variable not allowed to be set or mutated directly because 
-    //React will not automatically identify such changes
-    issue.id = this.state.issues.length + 1;
-    issue.created = new Date();
-    const newIssueList = this.state.issues.slice(); //make a copy of the issues array
-    newIssueList.push(issue);
-    this.setState({ issues: newIssueList });
+    this.loadData();
   }
 
   render() {
@@ -137,7 +156,6 @@ class IssueList extends React.Component {
     );
   }
 }
-
 
 const element = <IssueList />
 ReactDOM.render(element, document.getElementById("content"));

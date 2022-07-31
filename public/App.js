@@ -28,6 +28,17 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
+//regular expression to test for ISO8601-formatted datetime string
+var dateRegex = new RegExp('^\\d\\d\\d\\d-\\d\\d-\\d\\d'); //convert the ISO8601-formatted GraphQLDate scalar retrieved from the server to the native Date type
+
+function jsonDateReviver(key, value) {
+  if (dateRegex.test(value)) {
+    return new Date(value);
+  }
+
+  return value;
+}
+
 var IssueFilter = /*#__PURE__*/function (_React$Component) {
   _inherits(IssueFilter, _React$Component);
 
@@ -51,7 +62,7 @@ var IssueFilter = /*#__PURE__*/function (_React$Component) {
 
 function IssueRow(props) {
   var issue = props.issue;
-  return /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, issue.id), /*#__PURE__*/React.createElement("td", null, issue.status), /*#__PURE__*/React.createElement("td", null, issue.owner), /*#__PURE__*/React.createElement("td", null, issue.effort), /*#__PURE__*/React.createElement("td", null, issue.created), /*#__PURE__*/React.createElement("td", null, issue.due), /*#__PURE__*/React.createElement("td", null, issue.title));
+  return /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, issue.id), /*#__PURE__*/React.createElement("td", null, issue.status), /*#__PURE__*/React.createElement("td", null, issue.owner), /*#__PURE__*/React.createElement("td", null, issue.effort), /*#__PURE__*/React.createElement("td", null, issue.created.toDateString()), /*#__PURE__*/React.createElement("td", null, issue.due ? issue.due.toDateString() : ""), /*#__PURE__*/React.createElement("td", null, issue.title));
 }
 
 function IssueTable(props) {
@@ -89,7 +100,7 @@ var IssueAdd = /*#__PURE__*/function (_React$Component2) {
       var issue = {
         owner: form.owner.value,
         title: form.title.value,
-        status: 'New'
+        due: new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 10)
       };
       this.props.createIssue(issue);
       form.owner.value = "";
@@ -129,9 +140,9 @@ var IssueList = /*#__PURE__*/function (_React$Component3) {
     _this2 = _super3.call(this);
     _this2.state = {
       issues: []
-    };
-    _this2.createIssue = _this2.createIssue.bind(_assertThisInitialized(_this2)); //bind createIssue to IssueList so arrow function in IssueAdd and anywhere else uses it
+    }; //bind createIssue to IssueList so arrow function in IssueAdd and anywhere else uses it
 
+    _this2.createIssue = _this2.createIssue.bind(_assertThisInitialized(_this2));
     return _this2;
   }
 
@@ -144,7 +155,7 @@ var IssueList = /*#__PURE__*/function (_React$Component3) {
     key: "loadData",
     value: function () {
       var _loadData = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-        var query, response, result;
+        var query, response, body, result;
         return _regeneratorRuntime().wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -163,18 +174,17 @@ var IssueList = /*#__PURE__*/function (_React$Component3) {
 
               case 3:
                 response = _context.sent;
-                console.log(response);
-                _context.next = 7;
-                return response.json();
+                _context.next = 6;
+                return response.text();
 
-              case 7:
-                result = _context.sent;
+              case 6:
+                body = _context.sent;
+                result = JSON.parse(body, jsonDateReviver);
                 this.setState({
                   issues: result.data.issueList
                 });
-                console.log(result);
 
-              case 10:
+              case 9:
               case "end":
                 return _context.stop();
             }
@@ -190,18 +200,43 @@ var IssueList = /*#__PURE__*/function (_React$Component3) {
     }()
   }, {
     key: "createIssue",
-    value: function createIssue(issue) {
-      //state variable not allowed to be set or mutated directly because 
-      //React will not automatically identify such changes
-      issue.id = this.state.issues.length + 1;
-      issue.created = new Date();
-      var newIssueList = this.state.issues.slice(); //make a copy of the issues array
+    value: function () {
+      var _createIssue = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(issue) {
+        var query, response;
+        return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                query = "mutation {\n      issueAdd(issue:{\n        title: \"".concat(issue.title, "\", \n        owner: \"").concat(issue.owner, "\", \n        due: \"").concat(issue.due.toISOString(), "\",\n      }) {\n        id\n      }\n    }");
+                _context2.next = 3;
+                return fetch('/graphql', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    query: query
+                  })
+                });
 
-      newIssueList.push(issue);
-      this.setState({
-        issues: newIssueList
-      });
-    }
+              case 3:
+                response = _context2.sent;
+                this.loadData();
+
+              case 5:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this);
+      }));
+
+      function createIssue(_x) {
+        return _createIssue.apply(this, arguments);
+      }
+
+      return createIssue;
+    }()
   }, {
     key: "render",
     value: function render() {
